@@ -1,0 +1,114 @@
+This program is a GDB-stub for URIBO on AE-H8/3069-LAN
+
+Copyright (C) 2003
+Naonori Tazawa
+
+Copyright (C) 2007,2008,2009,2010
+256TECH Co., Ltd.
+Masahiro Sakamoto
+mail:m-sakamoto(AT)users.sourceforge.net
+
+This program is part of URIBO.
+
+URIBO is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+URIBO is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with URIBO; see the file COPYING and COPYING.LESSER.
+If not, see <http://www.gnu.org/licenses/>.
+
+
+1 Introduction
+
+This stub is for URIBO on AKIZUKI AE-H8/3069-LAN Board.
+The original version of this is from TOPPERS project.
+(http://www.toppers.jp/contrib/h8_stub_2003_0603.tar.gz)
+(URIBO INSTALLED DIR)/h8300h/h8-stub/original-version/h8_stub_2003_0603.tar.gz)
+
+2 The work area
+
+The stub uses 0xffc020 - 0xffd01f at on-chip RAM.
+So, NEVER access this area from any other programs.
+You can change it with the .mem file.
+
+3 Serial port
+
+The stub uses SCI1 (CN4) serial port.
+You can change SCI channel by "CH" macro.
+Please add "-DCH=0" option to "CFLAGS" line at Makefile,
+and the stub will use SCI0.
+
+Serial setting: 38400bps 8bits no-parity 1-stop-bit
+It is assumed that CPU clock is 20MHz.
+
+4 Print to GDB console.
+
+Please execute "trapa #1" opecode to output one character to GDB console.
+Parameter: er0=0, er1=character code
+
+5 GDB ctrl-C break
+
+You can make pause in the program execution by ctrl-C on GDB console.
+This function depends on SCI receive interrupt.
+
+6 Start debugging
+
+(e.g., at Linux terminal)
+
+$ h8300-linux-elf-gdb foobar.elf
+
+(gdb) set remotebaud 38400
+(gdb) target remote /dev/ttyS0    /* USB-seirial cable: /dev/ttyUSB0 etc. */
+(gdb) display/i $pc
+(gdb) load
+(gdb) cont
+
+Note: GDB 5.2.1 experienced.
+
+8 GDB patch
+
+It is recommended to modify the GDB source before you build.
+
+--- (GDB source dir)/gdb/config/h8300/tm-h8300.h ---
+
+Line 62:
+#define TARGET_INT_BIT  32
+
+Line 155:
+#define ARGLAST_REGNUM	1
+
+9 Disable DRAM burst access
+
+Ths stub initialize DRCRA register by 0x30,
+So, burst-enable and RAS-down-mode are off.
+This slow access setting is to avoid problem with OKI MSM5117805 EDO DRAM.
+
+10 Interrupt vector code
+
+The original version makes pesudo vector on RAM but it is slow.
+This version will only jump to kernel interrupt entry.
+Howerver, the vector code saves er0 and er1 register value to the stack
+and sets IRQ number to er0.
+The first word of on-chip RAM (0xffbf20 - 0xffbf23) is used to
+point kernel interrupt entry, and it symbol is "VECT" at isr.S.
+
+11 GCC
+
+The experienced version is 3.4.3.
+The original version of stub uses COFF mode, but this version uses ELF mode.
+
+12 Trap vectors
+
+trapa #0: Call GDB console
+trapa #1: Print to GDB console (See section 4)
+trapa #2: Jump to URIBO interrupt entry
+trapa #3: GDB break trap (Break points)
+
+### end ###

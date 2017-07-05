@@ -1,0 +1,8 @@
+MEMORY
+{
+        VECT(rx):		ORIGIN = 0x000000, LENGTH = 0x100
+        ROM(rx):		ORIGIN = 0x000100, LENGTH = 0x7FF00
+        RAM(rwx):		ORIGIN = 0xFFC020, LENGTH = 0xA00
+        STACK(rw):		ORIGIN = 0xFFCA20, LENGTH = 0x600
+        /* FREE: FFD020-FFFF20 */
+}

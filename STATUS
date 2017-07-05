@@ -1,0 +1,59 @@
+This is version and developmnet status information of URIBO.
+
+Copyright (C) 2007,2008,2009,2010
+256TECH Co., Ltd.
+Masahiro Sakamoto (m-sakamoto@users.sourceforge.net)
+
+This file is part of URIBO.
+
+URIBO is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+URIBO is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with URIBO; see the file COPYING and COPYING.LESSER.
+If not, see <http://www.gnu.org/licenses/>.
+
+
+ Date(JST) |SVN Rev.|Kernel Ver.|                       STATUS
+======================================================================================
+Apr 17 2010|   -    |   0.01    |The compilation was completed and start debugging.
+-----------+--------+-----------+-----------------------------------------------------
+Apr 19 2010|   ?    |   0.02    |The project web and e-mail address are changed.
+           |        |           |Because this project moved from sourceforge.jp to
+           |        |           |sourcefoge.net.
+-----------+--------+-----------+-----------------------------------------------------
+Apr 22 2010|   19   |   0.03    |Add ROM application.
+-----------+--------+-----------+-----------------------------------------------------
+Apr 23 2010|   20   |   0.04    |Bug fixed: A waiting queeue which is related to
+           |        |           |dly_tsk/(t)slp_tsk/POR is not initialized.
+           |        |           |Unkown interrupt handler is added in "_KERNEL_DEBUG"
+           |        |           |compilation mode.
+-----------+--------+-----------+-----------------------------------------------------
+Apr 26 2010|   24   |   0.05    |The memory allocation at sysini() is improved.
+           |        |           |The skeleton of kernel test program is added.
+           |        |           |'@' removed from documents.
+-----------+--------+-----------+-----------------------------------------------------
+Apr 29 2010|   38   |   0.06    |The user's manual (index.html) improved.
+           |        |           |Add buffer align checking to cre_???.
+           |        |           |Kernel test program improved.
+           |        |           |Change CYCNO_MAX/ALMNO_MAX defaults.
+           |        |           |Context checking corrected.
+           |        |           |ref_sys/ref_cfg corrected.
+-----------+--------+-----------+-----------------------------------------------------
+Apr 30 2010|   43   |   0.07    |#error improved.
+           |        |           |Kernel test program improved.
+-----------+--------+-----------+-----------------------------------------------------
+May 09 2010|   46   |   0.08    |sci.c/get_sci() corrected.
+           |        |           |Byte mode (TA_BYTE) added to data queue.
+           |        |           |Interrupt driven SIO driver (sio.h/sio.c) added.
+           |        |           |SIO driver test program added.
+-----------+--------+-----------+-----------------------------------------------------
+
+### END ###

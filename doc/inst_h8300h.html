@@ -1,0 +1,219 @@
+<html lang="en">
+<head>
+<title>H8/300H Installation</title>
+<meta http-equiv="Content-Type" content="text/html">
+<!--
+Copyright (C) 2007,2008,2009,2010
+256TECH Co., Ltd.
+Masahiro Sakamoto
+mail:m-sakamoto(AT)users.sourceforge.net
+
+This file is part of URIBO.
+
+URIBO is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+URIBO is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with URIBO; see the file COPYING and COPYING.LESSER.
+If not, see <http://www.gnu.org/licenses/>.
+-->
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css"><!--
+  pre.display { font-family:inherit }
+  pre.format  { font-family:inherit }
+  pre.smalldisplay { font-family:inherit; font-size:smaller }
+  pre.smallformat  { font-family:inherit; font-size:smaller }
+  pre.smallexample { font-size:smaller }
+  pre.smalllisp    { font-size:smaller }
+  span.sc    { font-variant:small-caps }
+  span.roman { font-family:serif; font-weight:normal; } 
+  span.sansserif { font-family:sans-serif; font-weight:normal; } 
+  table {
+    border-top:1px solid black;
+    border-left:1px solid black;
+    border-collapse:collapse;
+    border-spacing:0;
+    empty-cells:show;
+  }
+  th {
+    border-right:1px solid black;
+    border-bottom:1px solid black;
+    background-position:left top;
+    text-align:center;
+  }
+  td {
+    border-right:1px solid black;
+    border-bottom:1px solid black;
+  }
+--></style>
+</head>
+<body>
+This file documents how to install URIBO for H8/300H target.
+
+<h2>Table of Contents</h2>
+
+<ul>
+<li><a href="#intro"       > Introduction</a></li>
+<li><a href="#host"        > 1 Install URIBO files to the host </a></li>
+<li><a href="#stub"        > 2 Install GDB stub to the target board </a></li>
+<li><a href="#bintool"     > 3 Install tool chain from binary package </a></li>
+<li><a href="#srctool"     > 4 Install tool chain from source package
+### Under construction ### </a></li>
+</ul>
+
+<hr/>
+<a name="intro"></a>
+<h2> Introduction </h2>
+
+<h3> Environment </h3>
+
+This is an example of the environment as follows.
+
+<ul><table>
+  <tr>
+    <td> CPU chip </td>
+    <td> H8/3069 </td>
+  </tr>
+  <tr>
+    <td> CPU core </td>
+    <td> H8/300H </td>
+  </tr>
+  <tr>
+    <td> Target board </td>
+    <td> AKIZUKI AE-H8/3069-LAN Board </td>
+  </tr>
+  <tr>
+    <td> Host OS </td>
+    <td> Debian GNU/Linux 5.0 </td>
+  </tr>
+  <tr>
+    <td> GDB remote connection type </td>
+    <td> Serial port </td>
+  </tr>
+  <tr>
+    <td> BINUTILS </td>
+    <td> 2.16.1 </td>
+  </tr>
+  <tr>
+    <td> GCC </td>
+    <td> 3.4.3 </td>
+  </tr>
+  <tr>
+    <td> NEWLIB </td>
+    <td> 1.13.0 </td>
+  </tr>
+  <tr>
+    <td> GDB </td>
+    <td> 5.2.1 </td>
+  </tr>
+</table></ul>
+
+<hr/>
+<a name="host"></a>
+<h2> 1 Install URIBO files to the host </h2>
+
+e.g., You want to install to your home directory.
+
+<ul><pre>
+$ cd
+$ tar xjf (downloaded dir)/uriboYYMMDD.tar.bz2
+</pre></ul>
+
+"YYMMDD" means date of the release.
+And, you can see ~/uribo directory, now.
+<br><br>
+
+<hr/>
+<a name="stub"></a>
+<h2> 2 Install GDB stub to the target board </h2>
+
+Please connect host-PC to target board by a straight serial cable or
+USB-serial cable.
+Please read "/dev/ttyUSB0" etc. in a different way as "/dev/ttyS0" after this
+if you want to use USB.
+Please set the DIPSW near CPU chip to as follows BEFORE you turn on power.
+These settings will make CPU in flash programing mode.
+
+<ul><pre>
+ON  o o   o
+OFF     o
+    1 2 3 4
+</pre></ul>
+
+Please turn on power and execute "h8write" to program the on-chip flash ROM.
+
+<ul><pre>
+$ cd uribo/h8300h/h8-stub
+$ ../h8write/h8write -3069 -f20 h8-stub.mot /dev/ttyS0
+H8/3069F is ready!  2002/5/20 Yukio Mituiwa.
+writing
+ingore record
+ingore record
+............................................................................
+............................................................................
+............................................................................
+...............................................................
+EEPROM Writing is successed.
+$ 
+</pre></ul>
+
+Please turn OFF power and set the DIPSW again as follows.
+These settings will make CPU in mode-5.
+
+<ul><pre>
+ON  o   o  
+OFF   o   o
+    1 2 3 4
+</pre></ul>
+
+Please turn on power again.
+GDB stub installation is done.
+<br><br>
+
+Note: <a href="../h8300h/h8-stub/README"> H8 GDB stub README is here. </a>
+<br><br>
+
+<hr/>
+<a name="bintool"></a>
+<h2> 3 Install tool chain from binary package </h2>
+
+It is necessary that you have permission to write /usr/local.
+
+<ul><pre>
+$ cd /usr/local
+$ tar xjf (downloaded dir)/h8300-linux-elf-gcc-bin-YYMMDD.tar.bz2
+</pre></ul>
+
+Please add tool chain path to "PATH" variable.
+
+<ul><pre>
+$ export PATH=/usr/local/h8300-linux-elf/bin:$PATH
+</pre></ul>
+
+Please try to compile the sample application.
+
+<ul><pre>
+$ cd ~/uribo/h8300h/ap_ae_h8_3069_lan/
+$ make clean all
+</pre></ul>
+
+It is done if you got "test.elf" with no error.
+<br><br>
+
+<hr/>
+<a name="srctool"></a>
+<h2> 4 Install tool chain from source package ### Under construction ### </h2>
+
+<hr/>
+Copyright (C) 256TECH Co., Ltd. <br>
+Masahiro Sakamoto<br>
+mail:m-sakamoto(AT)users.sourceforge.net
+
+</body></html>

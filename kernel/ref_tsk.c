@@ -1,0 +1,100 @@
+/*
+ * Copyright (C) 2007,2008,2009,2010
+ * 256TECH Co., Ltd.
+ * Masahiro Sakamoto (m-sakamoto@users.sourceforge.net)
+ *
+ * This file is part of URIBO.
+ *
+ * URIBO is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * URIBO is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with URIBO; see the file COPYING and COPYING.LESSER.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
+#include "kernel.h"
+
+/*
+ * ref_tsk system call
+ */
+ER ref_tsk(ID tskid, T_RTSK *pk_rtsk)
+{
+    UINT psw;
+    ER r = E_OK;
+    T_TCB *tcb;
+    UB sts;
+    STAT wai;
+
+#ifndef _KERNEL_NO_STATIC_ERR
+    {
+        UB s = _kernel_sts;
+        /*
+         * check context
+         */
+        if (_KERNEL_CHK_LOC(s))
+            _KERNEL_RET(E_CTX);
+        /*
+         * check par
+         */
+        if (tskid == TSK_SELF) {
+            if (_KERNEL_CHK_IS(s))
+                _KERNEL_RET(E_ID);
+        } else if (_kernel_tskid_max < (UINT)tskid) {
+            _KERNEL_RET(E_ID);
+        }
+        if (!pk_rtsk)
+            _KERNEL_RET(E_PAR);
+    }
+#endif /* _KERNEL_NO_STATIC_ERR */
+
+    /*
+     * start critical section
+     */
+    psw = _KERNEL_DIS_PSW();
+    /*
+     * get TCB
+     */
+    if (tskid == TSK_SELF) {
+        tcb = (T_TCB *)_kernel_cur;
+    } else if (!(tcb = _kernel_tcb[tskid - 1])) {
+        _KERNEL_END(E_NOEXS);
+    }
+    /*
+     * get info
+     */
+    sts = tcb->sts;
+    wai = tcb->wai;
+    pk_rtsk->tskstat = (sts == TTS_RDY && tcb == _kernel_cur)? TTS_RUN : sts;
+    pk_rtsk->tskpri  = (sts != TTS_DMT)? tcb->pri : 0;
+#ifdef _KERNEL_MTX
+    pk_rtsk->tskbpri = (sts != TTS_DMT)? tcb->bpri : 0;
+#else
+    pk_rtsk->tskbpri = (sts != TTS_DMT)? tcb->pri : 0;
+#endif
+    pk_rtsk->tskwait = (sts & TTS_WAI)? wai : 0;
+    pk_rtsk->wobjid  = 
+        ((sts & TTS_WAI) && !(wai & (TTW_SLP | TTW_DLY | TTW_RDV)))? tcb->wid : 0;
+    pk_rtsk->lefttmo = 
+        ((sts & TTS_WAI) && tcb->tim.n)?
+        tcb->tim.tmo - _kernel_sysclk : 0;
+    pk_rtsk->actcnt  = tcb->act;
+    pk_rtsk->wupcnt  = tcb->wup;
+    pk_rtsk->suscnt  = tcb->sus;
+    /*
+     * end of critical section
+     */
+end:
+    _KERNEL_SET_PSW(psw);
+ret:
+    _KERNEL_ASSERT_REF_TSK();
+    return r;
+}
+
+/* end */

@@ -1,0 +1,2775 @@
+<html lang="en">
+<head>
+<title> URIBO User's manual </title>
+<meta http-equiv="Content-Type" content="text/html">
+<!--
+Copyright (C) 2007,2008,2009,2010
+256TECH Co., Ltd.
+Masahiro Sakamoto
+mail:m-sakamoto(AT)users.sourceforge.net
+
+This file is part of URIBO.
+
+URIBO is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+URIBO is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with URIBO; see the file COPYING and COPYING.LESSER.
+If not, see <http://www.gnu.org/licenses/>.
+-->
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css"><!--
+  pre.display { font-family:inherit }
+  pre.format  { font-family:inherit }
+  pre.smalldisplay { font-family:inherit; font-size:smaller }
+  pre.smallformat  { font-family:inherit; font-size:smaller }
+  pre.smallexample { font-size:smaller }
+  pre.smalllisp    { font-size:smaller }
+  span.sc    { font-variant:small-caps }
+  span.roman { font-family:serif; font-weight:normal; } 
+  span.sansserif { font-family:sans-serif; font-weight:normal; } 
+  table {
+    border-top:1px solid black;
+    border-left:1px solid black;
+    border-collapse:collapse;
+    border-spacing:0;
+    empty-cells:show;
+  }
+  th {
+    border-right:1px solid black;
+    border-bottom:1px solid black;
+    background-position:left top;
+    text-align:center;
+  }
+  td {
+    border-right:1px solid black;
+    border-bottom:1px solid black;
+  }
+--></style>
+</head>
+<body>
+This file documents the use of the URIBO-uITRON4.0-Kernel.
+
+<p>Copyright (C) 2007,2008,2009,2010<br>
+256TECH Co., Ltd.<br>
+Masahiro Sakamoto<br>
+mail:m-sakamoto(AT)users.sourceforge.net<br>
+http://uribo.sourceforge.net
+
+<p>This is a real-time OS based on uITRON4.0 full specification.
+
+<p>URIBO is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+<p>URIBO is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+<p>You should have received a copy of the GNU General Public License
+along with URIBO; see the file COPYING and COPYING.LESSER.
+If not, see (http://www.gnu.org/licenses/).
+
+<h2>Table of Contents</h2>
+
+<ul>
+<li><a href="#intro"       >Introduction</a></li>
+<li><a href="#quick"       >1 Quick start</a></li>
+<li><a href="#config"      >2 Configuration</a></li>
+  <ul>
+  <li><a href="#options"   >2.1 Kernel compile options</a></li>
+    <ul>
+    <li><a href="#assert"  >2.1.1 Service call assertion (_KERNEL_ASSERT)</a></li>
+    <li><a href="#mutex"   >2.1.2 Enable mutex (_KERNEL_MTX)</a></li>
+    <li><a href="#ovr"     >2.1.3 Enable overrun handler (_KERNEL_OVR)</a></li>
+    <li><a href="#static"  >2.1.4 No static error checking (_KERNEL_NO_STATIC_ERR)</a></li>
+    <li><a href="#fill"    >2.1.5 No stack filling (_KERNEL_NO_STKFIL)</a></li>
+    <li><a href="#bss"     >2.1.6 Not cleared BSS (_KERNEL_NO_BSSCLR)</a></li>
+    <li><a href="#debug"   >2.1.7 Kernel debugging (_KERNEL_DEBUG)</a></li>
+    </ul>
+  <li><a href="#config_h"  >2.2 Kernel configuration header</a></li>
+    <ul>
+    <li><a href="#tskpri"  >2.2.1 Maximum number of task priority (TPRI_MAX)</a></li>
+    <li><a href="#object"  >2.2.2 Maximum number of kernel objects (?????_MAX)</a></li>
+    <li><a href="#stksiz"  >2.2.3 Stack size for non-task contexts (ISTKSZ/TSTKSZ)</a></li>
+    <li><a href="#memsiz"  >2.2.4 Memory pool sizes (SYSMSZ/MPLMSZ/STKMSZ)</a></li>
+    <li><a href="#queue"   >2.2.5 Hashed queue sizes (TMRQSZ/CYCQSZ/ALMQSZ/ISRQSZ)</a></li>
+    <li><a href="#kerlev"  >2.2.6 Kernel interrupt level (KNL_LEVEL)</a></li>
+    </ul>
+  <li><a href="#msec"      >2.3 System timer interval (MSEC)</a></li>
+  </ul>
+<li><a href="#api"         >3 Enhanced API from uITRON4.0 specification</a></li>
+  <ul>
+  <li><a href="#system"    >3.1 System functions (Not uITRON)</a></li>
+    <ul>
+    <li><a href="#sysini"  >3.1.1 sysini</a></li>
+    <li><a href="#intsta"  >3.1.2 intsta</a></li>
+    <li><a href="#syssta"  >3.1.3 syssta</a></li>
+    <li><a href="#intext"  >3.1.4 intext</a></li>
+    </ul>
+  <li><a href="#service"   >3.2 Enhanced service calls</a></li>
+    <ul>
+    <li><a href="#autoalc" >3.2.1 create TSK/DTQ/MBF/MPF/MPL with auto allocation</a></li>
+    <li><a href="#inhisr"  >3.2.2 INH/ISR with interrupt mask</a></li>
+    <li><a href="#chg_ims" >3.2.3 chg_ims</a></li>
+    <li><a href="#get_ims" >3.2.4 get_ims</a></li>
+    <li><a href="#ref_sys" >3.2.5 ref_sys</a></li>
+    <li><a href="#ref_cfg" >3.2.6 ref_cfg</a></li>
+    <li><a href="#vcan_wup">3.2.7 vcan_wup (Not uITRON)</a></li>
+    <li><a href="#vget_tid">3.2.8 vget_tid (Not uITRON)</a></li>
+    <li><a href="#vdis_psw">3.2.9 vdis_psw (Not uITRON)</a></li>
+    <li><a href="#vset_psw">3.2.10 vset_psw (Not uITRON)</a></li>
+    <li><a href="#hlng"    >3.2.11 No effect of TA_HLNG/TA_ASM attributes</a></li>
+    <li><a href="#ref_mpl" >3.2.12 Get inner kernel memory information by ref_mpl</a></li>
+    <li><a href="#byte_dtq">3.2.13 Byte mode data queue</a></li>
+    </ul>
+  </ul>
+<li><a href="#list"        >4 URIBO service calls list</a></li>
+  <ul>
+  <li><a href="#ls_tsk"    >4.1 Task management </a></li>
+  <li><a href="#ls_tsyn"   >4.2 Task dependent synchronization </a></li>
+  <li><a href="#ls_exp"    >4.3 Task exception </a></li>
+  <li><a href="#ls_syn"    >4.4 Synchronization and communication </a></li>
+  <li><a href="#ls_esyn"   >4.5 Extended synchronization and communication </a></li>
+  <li><a href="#ls_mem"    >4.6 Memory pool </a></li>
+  <li><a href="#ls_tim"    >4.7 Timer </a></li>
+  <li><a href="#ls_sta"    >4.8 System state management </a></li>
+  <li><a href="#ls_int"    >4.9 Interrupt </a></li>
+  <li><a href="#ls_svc"    >4.10 Extended service call </a></li>
+  <li><a href="#ls_sys"    >4.11 System configuration </a></li>
+  </ul>
+<li><a href="#rom"         >5 How to boot from ROM</a></li>
+  <ul>
+  <li><a href="#rombld"    >5.1 Build</a></li>
+  <li><a href="#rompgm"    >5.2 Program target</a></li>
+  </ul>
+<li><a href="#sio"         >6 SIO driver (data queueu sample)</a></li>
+  <ul>
+  <li><a href="#ini_sio"   >6.1 ini_sio</a></li>
+  <li><a href="#put_sio"   >6.2 put_sio</a></li>
+  <li><a href="#get_sio"   >6.3 get_sio</a></li>
+  </ul>
+</ul>
+
+<hr/>
+<a name="intro"></a>
+<h2>Introduction</h2>
+
+URIBO is easy to use because it generates a object dynamically
+without configurator.
+This is designed to be suitable for even 16 bits microcomputer.
+The C compiler suitable for this is only GCC.
+
+<h3>Documents</h3>
+
+Documents are in the directory: (URIBO INSTALLED DIR)/doc/.
+
+<ul><table>
+  <tr>
+    <th>file</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>index.html</td>
+    <td>This document</td>
+  </tr>
+  <tr>
+    <td><a href="mitron-403e.pdf">mitron-403e.pdf</a></td>
+    <td>uITRON4.0 Specification</td>
+  </tr>
+  <tr>
+    <td><a href="inst_h8300h.html">inst_h8300h.html</a></td>
+    <td>H8/300H Installation</td>
+  </tr>
+</table></ul>
+<h3>Targets being supported now</h3>
+
+<ul>
+  <li>AKIZUKI AE-H8/3069-LAN (H3/300H core)</li>
+  <li>Altera FPGA Evaluation Board (Nios II core) ###Under construction###</li>
+  <li>TAC T-SH7706LSR Board (SH3 core) ###Under construction###</li>
+  <li>CQ LPC2388 Board (ARM7DTMI-S core) ###Under construction###</li>
+  <li>CQ STM32F103VB Board (Cortex-M3 core) ###Under construction###</li>
+  <li>CQ MCF52233 Board (ColdFire core) ###Under construction###</li>
+  <li>CQ uPD70F3716GC Board (V850ES core) ###Under construction###</li>
+  <li>CQ MB91FV310A Board (FR60 core) ###Under construction###</li>
+</ul>
+
+<h3>About uITRON</h3>
+
+<ul>
+  <li>TRON is the abbreviation of "The Real-time Operating systen Nucleus."</li>
+  <li>ITRON is the abbreviation of "Industrial TRON."</li>
+  <li>uITRON is the abbreviation of "Micro Industrial TRON."</li>
+  <li>TRON,ITRON, and uITRON do not refer to any specific product or products.</li>
+</ul>
+
+The uITRON4.0 Specification is an open real-time kernel specification
+developed by ITRON Association. The uITRON4.0 Specification document
+can be obtained from the TRON Association web site
+(http://www.assoc.tron.org).
+
+<h3>uITRON abbreviations</h3>
+
+The kernel objects as follows.
+
+<ul><table>
+  <tr>
+    <td>TSK</td>
+    <td>Task</th>
+  </tr>
+  <tr>
+    <td>SEM</td>
+    <td>Semaphore</th>
+  </tr>
+  <tr>
+    <td>FLG</td>
+    <td>Eventflag</th>
+  </tr>
+  <tr>
+    <td>DTQ</td>
+    <td>Data Queue</th>
+  </tr>
+  <tr>
+    <td>MBX</td>
+    <td>Mailbox</th>
+  </tr>
+  <tr>
+    <td>MTX</td>
+    <td>Mutex</th>
+  </tr>
+  <tr>
+    <td>MBF</td>
+    <td>Message Buffer</th>
+  </tr>
+  <tr>
+    <td>POR</td>
+    <td>Rendezvous Port</th>
+  </tr>
+  <tr>
+    <td>INH</td>
+    <td>(uITRON) Interrupt Handler</th>
+  </tr>
+  <tr>
+    <td>ISR</td>
+    <td>Interrupt Serivce Routine</th>
+  </tr>
+  <tr>
+    <td>MPL</td>
+    <td>Variable-sized Memory Pool</th>
+  </tr>
+  <tr>
+    <td>MPF</td>
+    <td>Fixed-sized Memory Pool</th>
+  </tr>
+  <tr>
+    <td>CYC</td>
+    <td>Cyclic Handler</th>
+  </tr>
+  <tr>
+    <td>ALM</td>
+    <td>Alarm Handler</th>
+  </tr>
+  <tr>
+    <td>OVR</td>
+    <td>Overrun Handler</th>
+  </tr>
+  <tr>
+    <td>SVC</td>
+    <td>Extended Serivce Call</th>
+  </tr>
+  <tr>
+    <td>SEM</td>
+    <td>Semaphore</th>
+  </tr>
+</table></ul>
+<hr/>
+<a name="quick"></a>
+<h2>1 Quick start</h2>
+
+<h3>Install GCC, GDB, and GDB-stub</h3>
+
+<p> Please refer to (URIBO INSTALLED DIR)/doc/inst_(TARGET NAME).html
+
+<h3>Build sample application</h3>
+
+<ul><pre>
+$ cd (URIBO INSTALLED DIR)/(CPU NAME)/app_(TARGET NAME)
+$ make
+</pre></ul>
+
+<h3>Load the application to RAM of the target by GDB</h3>
+
+e.g., The target is AE-H8/3069-LAN.
+
+<ul><pre>
+$ h8300-linux-elf-gdb test.elf
+</pre></ul>
+
+If you want to use USB-serial cable, please specify /dev/ttyUSB0
+etc. instead of /dev/ttyS0 in .gdbinit script.
+
+<ul><pre>
+Current directory is /home/saka/uribo/h8300h/app_ae_h8_3069_lan/
+GNU gdb 5.2.1
+Copyright 2002 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type "show copying" to see the conditions.
+There is absolutely no warranty for GDB.  Type "show warranty" for details.
+This GDB was configured as "--host=i686-pc-linux-gnu --target=h8300-linux-elf"...
+0x000013ac in ?? ()
+Loading section .text, size 0x4236 lma 0x400000
+Loading section .data, size 0x3e lma 0x404236
+Start address 0x400000, load size 17012
+Transfer rate: 5443 bits/sec, 50 bytes/write.
+(gdb)
+</pre></ul>
+
+<h3>Run</h3>
+
+Please do continue command.
+
+<ul><pre>
+(gdb) cont
+</pre></ul>
+
+Sample appplication outputs printf messages to GDB console as follows.
+
+<ul><pre>
+task1 started. (exinf=11)
+task1 slept and gave CPU.
+task2 started. (exinf=22)
+task2 has been waiting for one second...
+task2 woke task1 up and gave CPU.
+task1 was waken up and got CPU.
+task1 slept and gave CPU.
+task2 got CPU.
+task2 has been waiting for one second...
+task2 woke task1 up and gave CPU.
+task1 was waken up and got CPU.
+task1 slept and gave CPU.
+task2 got CPU.
+task2 has been waiting for one second...
+task2 woke task1 up and gave CPU.
+task1 was waken up and got CPU.
+task1 slept and gave CPU.
+task2 got CPU.
+...
+</pre></ul>
+
+<hr/>
+<a name="config"></a>
+<h2> 2 Configuration </h2>
+
+<a name="options"></a>
+<h2> 2.1 Kernel compiling options </h2>
+
+<p> You can enable or disable some kernel functions.
+These are pre-processor symbols when compiling kernel.
+e.g., Please add "-D_KERNEL_ASSERT" option to the CFLAGS line
+in the Makefile if you want to enable service call assertion.
+
+<a name="assert"></a>
+<h2> 2.1.1 Service call assertion (_KERNEL_ASSERT) </h2>
+
+The service call assertion is enabled if "_KERNEL_ASSERT" symbol is defined.
+The kernel displays the message following "KERNEL ASSERT"
+when an error is found at the exit of service calls or
+<a href="#system"> system functions </a>
+, and passes GDB the control.
+However, the following errors are ignored: E_TMOUT, E_RLWAI, and E_DLT.
+
+<a name="mutex"></a>
+<h2> 2.1.2 Enable mutex (_KERNEL_MTX) </h2>
+
+The mutex function is enabled if "_KERNEL_MTX" symbol is defined.
+The kernel is impemented under not "the strict priority control rule"
+but "the simplified priority control roule".
+However, if you do not need mutex, 
+I recommend it not to be enabled because mutex code is too heavy
+for uITRON kernel. 
+
+<a name="ovr"></a>
+<h2> 2.1.3 Enable overrun handler (_KERNEL_OVR) </h2>
+
+The overrun handler is enabled if "_KERNEL_OVR" symbol is defined.
+The kernel defines system timer interrupt handler as not INH but ISR
+if this is enabled.
+
+<a name="static"></a>
+<h2>2.1.4 No static error checking (_KERNEL_NO_STATIC_ERR)</h2>
+
+The omission of checking static error is enabled
+if "_KERNEL_NO_STATIC_ERR" symbol is defined.
+"static errro" means the check on parameters of service call at the entrance.
+This option is used to omit that checking and make fast.
+The kernel will record the found error in "SYSER" variable.
+(However, the following errors are ignored: E_TMOUT, E_RLWAI, and E_DLT.)
+So, you might be able to enable this if "SYSER" keeps 0.
+
+<a name="fill"></a>
+<h2>2.1.5 No stack filling (_KERNEL_NO_STKFIL)</h2>
+
+The omission of filling stacks with fixed pattern is enabled
+if "_KERNEL_NO_STKFIL" symbol is defined.
+The kernel will fill stacks of user task with the ID of the task at cre_tsk().
+The kernel will fill stack of interrupt handler with 0xdd
+and will fill stack of system timer task with 0xee at sysini().
+These are used to check the quantity consumed of the stack later. 
+You can make initialization fast at sysini() and cre_tsk() by this option.
+
+<a name="bss"></a>
+<h2>2.1.6 Not cleared BSS (_KERNEL_NO_BSSCLR)</h2>
+
+The kernel will clear some important variables of itself at sysini()
+if "_KERNEL_NO_BSSCLR" symbol is defined.
+You must use this option if your C start up routine omits to
+clear BSS section by 0.
+
+<a name="debug"></a>
+<h2>2.1.7 Kernel debugging (_KERNEL_DEBUG)</h2>
+
+The kernel debugging code is enabled if "_KERNEL_DEBUG" symbol is defined.
+That code can find kernel internal error.
+
+<a name="config_h"></a>
+<h2> 2.2 Kernel configuration header </h2>
+
+Please inlcude "config.h" at only by one of application source files.
+This header file defines default values of kernel configuration and
+defines pointer array for objects, etc.
+It is all done if you are satisfied with those default values.
+<br>(e.g., "main.c" includes "config.h")
+<ul><pre>
+#include "kernel.h"
+#include "config.h"    /* Default configuration only */
+int main()
+{
+    sysini();
+    ...
+</pre></ul>
+
+Or, please define the value at before "config.h"
+if you want to override defaults.
+<br>(e.g., Override muximum number of task priority)
+<ul><pre>
+#include "kernel.h"
+#define TPRI_MAX 2     /* Override the default value */
+#include "config.h"
+int main()
+{
+    sysini();
+    ...
+</pre></ul>
+
+<a name="tskpri"></a>
+<h2> 2.2.1 Maximum number of task priority (TPRI_MAX)</h2>
+
+This value defines the muximum number of task priority.
+Default value is 8. So, in that case you can use priority from 1 to 8. 
+It relates to the size of ready-queue and of waiting-queue
+in any object: e.g., semaphore which has "TA_TPRI" attribute.
+The size of a priority queue is TPRI_MAX * sizeof(void *).
+
+<a name="object"></a>
+<h2> 2.2.2 Maximum number of kernel objects (?????_MAX) </h2>
+
+These values defines the muximum value of object ID.
+e.g., You can use ID from 1 to 8 if the value is 8. 
+The size of an array for object pointer which is defined at "config.h"
+is (the maximum number) * sizeof(void *).
+
+<ul><table>
+  <tr>
+    <th>symbol </th>
+    <th>minimum</th>
+    <th>maximum</th>
+    <th>default</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>TPRI_MAX</td>
+    <td>0</th>
+    <td>255</th>
+    <td>8</th>
+    <td>Task Priority</th>
+  </tr>
+  <tr>
+    <td>TSKID_MAX</td>
+    <td>0</th>
+    <td>255</th>
+    <td>8</th>
+    <td>Task ID</th>
+  </tr>
+  <tr>
+    <td>SEMID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Semaphore ID</th>
+  </tr>
+  <tr>
+    <td>FLGID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Eventflag ID</th>
+  </tr>
+  <tr>
+    <td>DTQID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Data Queue ID</th>
+  </tr>
+  <tr>
+    <td>MBXID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Mailbox ID</th>
+  </tr>
+  <tr>
+    <td>MTXID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Mutex ID</th>
+  </tr>
+  <tr>
+    <td>MBFID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Message Buffer ID</th>
+  </tr>
+  <tr>
+    <td>PORID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Rendezvous Port ID</th>
+  </tr>
+  <tr>
+    <td>ISRID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Interrupt Service Routine ID</th>
+  </tr>
+  <tr>
+    <td>MPLID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Variable-sized Memory Pool ID</th>
+  </tr>
+  <tr>
+    <td>MPFID_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Fixed-sized Memory Pool ID</th>
+  </tr>
+  <tr>
+    <td>CYCNO_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Cyclic Handler ID</th>
+  </tr>
+  <tr>
+    <td>ALMNO_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Alarm Handler ID</th>
+  </tr>
+  <tr>
+    <td>SVCFN_MAX</td>
+    <td>0</th>
+    <td>32767</th>
+    <td>8</th>
+    <td>Extended Service Call Function Code </th>
+  </tr>
+</table></ul>
+
+<a name="stksiz"></a>
+<h2> 2.2.3 Stack size for non-task contexts  (ISTKSZ/TSTKSZ)</h2>
+
+"Non-task contexts" means two contexts of interrupt handler and
+of time event handler.
+The kernel will fill stack of interrupt handler with 0xdd
+and will fill stack of system timer task with 0xee at sysini().
+These are used to check the quantity consumed of the stack later. 
+
+<ul><table>
+  <tr>
+    <th>symbol </th>
+    <th>default</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>ISTKSZ</td>
+    <td>sizeof(T_CTX) * 4</th>
+    <td>Stack size of Interrupt Handler (INH/ISR Hanlder)</th>
+  </tr>
+  <tr>
+    <td>TSTKSZ</td>
+    <td>sizeof(T_CTX) * 4</th>
+    <td>Stack size of System Timer Task (OVR/CYC/ALM Handler)</th>
+  </tr>
+</table></ul>
+
+Note: "T_CTX" is structured data set of task context and it includes
+the image of the CPU registers.
+
+<a name="memsiz"></a>
+<h2> 2.2.4 Memory pool sizes (SYSMSZ/MPLMSZ/STKMSZ) </h2>
+
+The kernel has 3 internal memory pools.
+<ul>
+<li> Pool of System memory</li>
+<li> Pool of Memory pool memory</li>
+<li> Pool of Stack memory</li>
+</ul>
+
+<h3>System memory size (SYSMSZ)</h3>
+
+"System memory" is a space for structured data of kernel objects.
+e.g., "T_TCB" structured data will be allocated in pool of system memory
+at cre_tsk() or "T_SEM" will be allocated at cre_sem().
+Default value is 0 and you are able not to define "SYSMSZ"
+if you are not interested about this size.
+In that case, the data will be allocated in pool of stack memory
+and it is easy.
+
+<h3>Memory pool memory size (MPLMSZ)</h3>
+
+"Memory pool memory" is a space for buffers of MPL/MPF/MBF.
+e.g., The message buffer will be allocated in pool of memory pool memory
+at cre_mbf().
+Default value is 0 and you are able not to define "MPLMSZ"
+if you are not interested about this size.
+In that case, the buffer will be allocated in pool of stack memory
+and it is easy.
+
+<h3>Stack memory size (STKMSZ)</h3>
+"Stack memory" is a space for stack of user tasks,
+stack of interrupt handler, and stack of system timer task.
+Default value is 0 and you are able not to define "STKMSZ"
+if you are not interested about this size.
+In that case, most amounts of main() stack will be allocated as pool
+of stack memory and it is easy.
+
+<a name="queue"></a>
+<h2> 2.2.5 Hashed queue sizes (TMRQSZ/CYCQSZ/ALMQSZ/ISRQSZ) </h2>
+
+The kernel has 4 hashed queues.
+The memory size of a queue is (queue size) * sizeof(void *).
+The size and throughput are in the relation of the trade-off.
+
+<ul>
+<li> The timer queue for user tasks</li>
+<li> The timer queue for cyclic handlers</li>
+<li> The timer queue for alarm handlers</li>
+<li> The queue for interrupt service routines</li>
+</ul>
+
+<ul><table>
+  <tr>
+    <th>symbol </th>
+    <th>range  </th>
+    <th>default</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>TMRQSZ</td>
+    <td>1,2,4,8,16,32,64,128,256</th>
+    <td>8</td>
+    <td>Size of the timer queue for user tasks</td>
+  </tr>
+  <tr>
+    <td>CYCQSZ</td>
+    <td>1,2,4,8,16,32,64,128,256</th>
+    <td>8</td>
+    <td>Size of the timer queue for cyclic handlers</td>
+  </tr>
+  <tr>
+    <td>ALMQSZ</td>
+    <td>1,2,4,8,16,32,64,128,256</th>
+    <td>8</td>
+    <td>Size of the timer queue for alarm handlers</td>
+  </tr>
+  <tr>
+    <td>ISRQSZ</td>
+    <td>1,2,4,8,16,32,64,128,256,0x200,0x400,0x800,<br>0x1000,0x2000,0x4000,0x8000,0x10000</th>
+    <td>8</td>
+    <td>Size of the queue for interrupt service routines</td>
+  </tr>
+</table></ul>
+
+<a name="kerlev"></a>
+<h2> 2.2.6 Kernel interrupt level (KNL_LEVEL) </h2>
+
+You can change kernel interrupt level if the CPU has two or more levels.
+The kernel sets interrupt level to this value at inner critical section.
+Please note that the interrupt which has higher level than this value
+is out of control by kernel, and the handler for that can not call
+uITRON service calls.
+In addition, the "higer" handler must be defined by NOT def_inh()/cre_isr()
+service calls but as interrupt function
+(e.g., with "#pragma interrupt" or with "interrupt" attribute,
+and which will be driven by interrupt vector directly).
+The default value is defined at "config_s.h" in each taget directory.
+Level 1 is lowest level and NEVER define this to 0.
+
+<a name="msec"></a>
+<h2> 2.3 System timer interval (MSEC) </h2>
+
+This value means system timer interval in millisecond.
+This is convenient for the apprlication but the kernel never use.
+The default value is defined to 10 at "kernel.h".
+e.g., This value used like as follows if you want 1000 milliseconds delay.
+
+<ul><pre>
+dly_tsk(1000/MSEC); /* delay current task while one second */
+</pre></ul>
+
+e.g., If you want to change interval to 1 millisecond, 
+You must define "MSEC" before "kernel.h" at all of application source file.
+
+<ul><pre>
+#define MSEC 1
+#include "kernel.h"
+</pre></ul>
+
+And you must change initial count of timer hardware at intsta()
+to adjust for interval to be 1 millisecond.
+Please note that the kernel load grows when interval is shortened.
+
+<hr/>
+<a name="api"></a>
+<h2> 3 Enhanced API from uITRON4.0 specification </h2>
+
+<a name="system"></a>
+<h2> 3.1 System functions (Not uITRON) </h2>
+
+Most system functions are used to initializes the kernel.
+e.g., The initialization of a simple application with two tasks
+that switches over alternately is as follows.
+
+<ul><pre>
+--- main.c ---
+#include "kernel.h"
+#include "config.h"
+TASK task1()
+{
+    for (;;) slp_tsk();         /* sleep until be waken up */
+}
+TASK task2()
+{
+    for (;;) wup_tsk(1);        /* wake up task1 */
+}
+const T_CTSK ctsk1 = {TA_STA, 0, task1, 1 /* 1st priority */, 256};
+const T_CTSK ctsk2 = {TA_STA, 0, task2, 2 /* 2nd priority */, 256};
+void main()
+{
+    sysini();                   /* INITIALIZE SYSTEM */
+    cre_tsk(1, &ctsk1);         /* create task1 */
+    cre_tsk(2, &ctsk2);         /* create task2 */
+    intsta();                   /* START INTERRUPT BY SYSTEM TIMER */
+    syssta();                   /* START SYSTEM */
+}
+</pre></ul>
+
+<a name="sysini"></a>
+<h2> 3.1.1 sysini </h2>
+
+SYNOPSIS
+<ul><pre>
+ER sysini(void);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This is kernel initializer function.
+You can call any uITRON service call only after initialization.
+The CPU interrupt level is set to "KNL_LEVEL",
+and all interrupts under kernel control are disabled.
+</ul>
+
+ERRORS
+<ul><table>
+  <tr>
+    <th>symbol </th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>E_SYS</td>
+    <td> Can not allocate pool of system memory (SYSMSZ) </td>
+  </tr>
+  <tr>
+    <td>E_NOMEM</td>
+    <td>
+        Can not allocate pool of memory pool memory (MPLMSZ)           ||<br>
+        Can not allocate pool of stack memory (STKMSZ)                 ||<br>
+        Can not allocate interrupt handler stack (ISTKSZ)              ||<br>
+        Can not allocate system timer task stack (TSTKSZ)              ||<br>
+        Can not allocate mutex inheritance buffer (size=TPRI_MAX bytes)
+   </td>
+  </tr>
+</table></ul>
+
+<ul>
+See <a href="#memsiz"> SYSMSZ/MPLMSZ/STKMSZ </a>.<br>
+See <a href="#stksiz"> ISTKSZ/TSTKSZ </a>.<br>
+See <a href="#tskpri"> TPRI_MAX </a>.<br>
+</ul>
+
+<a name="intsta"></a>
+<h2> 3.1.2 intsta </h2>
+
+SYNOPSIS
+<ul><pre>
+ER intsta(void);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function initializes system timer hardware and enables timer interrupt.
+</ul>
+
+ERRORS
+<ul>
+It depends on each target.
+</ul>
+
+<a name="syssta"></a>
+<h2> 3.1.3 syssta </h2>
+
+SYNOPSIS
+<ul><pre>
+ER syssta(void);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function starts the multitask and never return.
+However, when some errors occurred at previous system functions or
+service calls,
+it will return with that error code.
+</ul>
+
+ERRORS
+<ul>
+It depends on previous service calls.
+</ul>
+
+<a name="intext"></a>
+<h2> 3.1.4 intext </h2>
+
+SYNOPSIS
+<ul><pre>
+ER intext(void);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function stops system timer hardware and disables timer interrupt.
+</ul>
+
+ERRORS
+<ul>
+It depends on each target.
+</ul>
+
+<a name="service"></a>
+<h2> 3.2 Enhanced service calls </h2>
+
+<a name="autoalc"></a>
+<h2> 3.2.1 create TSK/DTQ/MBF/MPF/MPL with auto allocation </h2>
+
+SYNOPSIS
+<ul><pre>
+ER cre_tsk(ID tskid, T_CTSK *pk_ctsk);
+ER_ID acre_tsk(T_CTSK *pk_ctsk);
+ER cre_dtq(ID dtqid, T_CDTQ *pk_cdtq);
+ER_ID acre_dtq(T_CDTQ *pk_cdtq);
+ER cre_mbf(ID mbfid, T_CMBF *pk_cmbf);
+ER_ID acre_mbf(T_CMBF *pk_cmbf);
+ER cre_mpf(ID mpfid, T_CMPF *pk_cmpf);
+ER_ID acre_mpf(T_CMPF *pk_cmpf);
+ER cre_mpl(ID mplid, T_CMPL *pk_cmpl);
+ER_ID acre_mpl(T_CMPL *pk_cmpl);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+The stack or the buffer will be allocated automatically
+if that address in initialization parameters is NULL and it is easy.
+</ul>
+
+<ul><table>
+  <tr>
+    <th>Service call</th>
+    <th>Address parameter (=NULL)</th>
+    <th>Which kernel memory pool will be used</th>
+  </tr>
+  <tr>
+    <td>cre_tsk/acre_tsk</td>
+    <td>stk</td>
+    <td>Stack memory</td>
+  </tr>
+  <tr>
+    <td>cre_dtq/acre_dtq</td>
+    <td>dtq</td>
+    <td>System memory</td>
+  </tr>
+  <tr>
+    <td>cre_mbf/acre_mbf</td>
+    <td>mbf</td>
+    <td>Memory pool memory</td>
+  </tr>
+  <tr>
+    <td>cre_mpf/acre_mpf</td>
+    <td>mpf</td>
+    <td>Memory pool memory</td>
+  </tr>
+  <tr>
+    <td>cre_mpl/acre_mpl</td>
+    <td>mpl</td>
+    <td>Memory pool memory</td>
+  </tr>
+</table></ul>
+
+<a name="inhisr"></a>
+<h2> 3.2.2 INH/ISR with interrupt mask </h2>
+
+SYNOPSIS
+<ul><pre>
+ER def_inh(INHNO inhno, T_DINH *pk_dinh);
+ER cre_isr(ID isrid, T_CISR *pk_cisr);
+ER_ID acre_isr(T_CISR *pk_cisr);
+ER ref_isr(ID isrid, T_RISR *pk_risr);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This is almost the same as the uITRON4.0 specification.
+However, "imask" member is added.
+The kernel sets CPU interrupt mask to this value while interrupt handler
+is executing.
+</ul>
+
+<ul><pre>
+typedef struct t_dinh {
+    ATR    inhatr;
+    FP     inthdr;
+    UINT   imask; /* added */
+} T_DINH;
+
+typedef struct t_cisr {
+    ATR    isratr;
+    VP_INT exinf;
+    INTNO  intno;
+    FP     isr;
+    UINT   imask; /* added */
+} T_CISR;
+
+typedef struct t_risr {
+    INTNO  intno;
+    UINT   imask; /* added */
+} T_RISR;
+</pre></ul>
+
+ERRORS
+<ul>
+This is almost the same as the uITRON4.0 specification.
+</ul>
+
+<a name="chg_ims"></a>
+<h2> 3.2.3 chg_ims </h2>
+
+SYNOPSIS
+<ul><pre>
+ER chg_ims(UINT imask);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function changes interrupt level, kernel lock status, and kernel
+dispatch possibility. The "imask" means not real CPU interrupt mask
+but kernel interrupt (logical) level: 0,1,2,...<br>
+The reserved dispatch requests are processed if "imask" = 0.
+Please note that loc_cpu/unl_cpu service calls can control lock status
+and dis_dsp/ena_dsp service calls can control dispatch possibility,
+independently.
+</ul>
+
+<ul><table>
+  <tr>
+    <th>imask (interrupt level)</th>
+    <th>kernel lock status</th>
+    <th>kernel dispatch possibility</th>
+  </tr>
+  <tr>
+    <td>0</td>
+    <td>unlocked (=unl_cpu())</td>
+    <td>enabled (=ena_dsp())</td>
+  </tr>
+  <tr>
+    <td>smaller than "KNL_LEVEL"</td>
+    <td>unlocked (=unl_cpu())</td>
+    <td>disabled (=dis_dsp())</td>
+  </tr>
+  <tr>
+    <td>equal to or larger than "KNL_LEVEL"</td>
+    <td>locked (=loc_cpu())</td>
+    <td>disabled (=dis_dsp())</td>
+  </tr>
+</table></ul>
+
+ERRORS
+<ul>
+None.
+</ul>
+
+<a name="get_ims"></a>
+<h2> 3.2.4 get_ims </h2>
+
+SYNOPSIS
+<ul><pre>
+ER get_ims(UINT *p_imask);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function returns current kernel interrupt level to the area 
+which is pointed by "p_imask".
+The "imask" means not real CPU mask but kernel interrupt (logical)
+level: 0,1,2,...
+</ul>
+
+ERRORS
+<ul><table>
+  <tr>
+    <th>symbol </th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>E_PAR</td>
+    <td>"p_imask" is NULL</td>
+  </tr>
+</table></ul>
+
+<a name="ref_sys"></a>
+<h2> 3.2.5 ref_sys </h2>
+
+SYNOPSIS
+<ul><pre>
+ER ref_sys(ID id, T_RSYS *pk_rsys);
+
+typedef struct t_rsys {
+    INT          sysstat;
+} T_RSYS;
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function returns current system states of the kernel.<br>
+<br>
+"sysstat" values:
+<table>
+  <tr>
+    <th>symbol of value</th>
+    <th>context state</th>
+    <th>dispatch state</th>
+    <th>interrupt state</th>
+  </tr>
+  <tr>
+    <td>TSS_TSK</td>
+    <td>Task</th>
+    <td>Enabled</th>
+    <td>Enabled</th>
+  </tr>
+  <tr>
+    <td>TSS_DDSP</td>
+    <td>Task</th>
+    <td>Disabled</th>
+    <td>Enabled</th>
+  </tr>
+  <tr>
+    <td>TSS_LOC</td>
+    <td>Task</th>
+    <td>Disabled</th>
+    <td>Disabled</th>
+  </tr>
+  <tr>
+    <td>TSS_INDP</td>
+    <td>Non-task</th>
+    <td>(Don't care)</th>
+    <td>(Don't care)</th>
+  </tr>
+</table>
+</ul>
+
+ERRORS
+<ul><table>
+  <tr>
+    <th>symbol </th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>E_PAR</td>
+    <td>"pk_rsys" is NULL</td>
+  </tr>
+</table></ul>
+
+<a name="ref_cfg"></a>
+<h2> 3.2.6 ref_cfg </h2>
+
+SYNOPSIS
+<ul><pre>
+ER ref_cfg(T_RCFG *pk_rcfg);
+
+typedef struct t_rcfg {
+    ID           tskid_max;
+    ID           semid_max;
+    ID           flgid_max;
+    ID           mbxid_max;
+    ID           mbfid_max;
+    ID           porid_max;
+    ID           mplid_max;
+    ID           mpfid_max;
+    ID           cycno_max;
+    ID           almno_max;
+    PRI          tpri_max;
+    int          tmrqsz;
+    int          cycqsz;
+    int          almqsz;
+    int          istksz;
+    int          tstksz;
+    SIZE         sysmsz;
+    SIZE         mplmsz;
+    SIZE         stkmsz;
+    ID           dtqid_max;
+    ID           mtxid_max;
+    ID           isrid_max;
+    ID           svcfn_max;
+    int          isrqsz;
+} T_RCFG;
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function returns kernel configuration values that will be defined at
+<a href = "#config_h">"config.h"</a>.
+</ul>
+
+ERRORS
+<ul><table>
+  <tr>
+    <th>symbol </th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>E_PAR</td>
+    <td>"pk_rcfg" is NULL</td>
+  </tr>
+</table></ul>
+
+<a name="vcan_wup"></a>
+<h2> 3.2.7 vcan_wup (Not uITRON) </h2>
+
+SYNOPSIS
+<ul><pre>
+void vcan_wup();
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function cancels all wake up requests for current task.
+It works same as can_wup, howerver it is simple and fast.
+</ul>
+
+<a name="vget_tid"></a>
+<h2> 3.2.8 vget_tid (Not uITRON) </h2>
+
+SYNOPSIS
+<ul><pre>
+ID vget_tid();
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function returns current running task ID.
+It works same as get_tid, howerver it is simple and fast.
+</ul>
+
+<a name="vdis_psw"></a>
+<h2> 3.2.9 vdis_psw (Not uITRON) </h2>
+
+SYNOPSIS
+<ul><pre>
+UINT vdis_psw(void);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function disables all interrupts that are under kernel control.
+This is faster than loc_cpu() and you should use for short critical
+section like as follows.
+</ul>
+
+<ul><pre>
+UINT psw;
+psw = vdis_psw();    /* start critical section */
+...
+vset_psw(psw);       /* end of critical section */
+</pre></ul>
+
+<ul>
+Please note that NEVER call a service call which causes dispatch
+at the critical section.
+</ul>
+
+RETURN VALUES
+<ul>
+This function returns previous value of CPU program status word register etc.
+It depends on each target.
+</ul>
+
+<a name="vset_psw"></a>
+<h2> 3.2.10 vset_psw (Not uITRON) </h2>
+
+SYNOPSIS
+<ul><pre>
+void vset_psw(UINT psw);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function sets CPU program status word register etc.
+This is faster than unl_cpu() and you should use for short critical
+section like as follows.
+</ul>
+
+<ul><pre>
+UINT psw;
+psw = vdis_psw();    /* start critical section */
+...
+vset_psw(psw);       /* end of critical section */
+</pre></ul>
+
+<ul>
+Please note that NEVER call a service call which causes dispatch
+at the critical section.
+</ul>
+
+<a name="hlng"></a>
+<h2> 3.2.11 No effect of TA_HLNG/TA_ASM attributes </h2>
+
+A task or a handler has TA_HLNG (High-level language) or TA_ASM (Assembly
+language) attribute in uITRON specification. However, the kernel will ignore these
+attributes because it assumes that all tasks and all handlers are in
+C language. And, you must write same calling sequence as C function
+if you want in assembly language.
+<br><br>
+
+<a name="ref_mpl"></a>
+<h2> 3.2.12 Get inner kernel memory information by ref_mpl </h2>
+
+The kernel has 
+<a href = "#memsiz">3 internal memory pools</a>.
+You can get usage information of these pools by ref_mpl service call
+with special ID as follows.
+
+<ul><table>
+  <tr>
+    <th>special ID</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>-4</td>
+    <td>Get information of the stack memory</th>
+  </tr>
+  <tr>
+    <td>-3</td>
+    <td>Get information of the system memory</th>
+  </tr>
+  <tr>
+    <td>-2</td>
+    <td>Get information of the memory-pool memory</th>
+  </tr>
+</table></ul>
+
+<a name="byte_dtq"></a>
+<h2> 3.2.13 Byte mode data queue </h2>
+
+"TA_BYTE" attribute was added to data queue at (a)cre_dtq.
+You can reduce buffer memory size by this option if you need only 8-bits
+data in data queue.
+The kernel sends only lower 8-bits data to data queue at (p|ip|t|f|if)snd_dtq.
+The kernel gets only 8-bits data from data queue and fill
+upper 24-bits of data by 0 at (p|t)rcv_dtq.
+<br><br>
+e.g., 16 bytes data queue:
+<ul><pre>
+stataic const T_CDTQ cdtq = {TA_TFIFO | TA_BYTE, 16};
+id = acre_dtq(&cdtq);
+</pre></ul>
+
+<hr/>
+<a name="list"></a>
+<h2> 4 URIBO service calls list </h2>
+
+Note: The service calls list includes abbreviations as follows.
+<ul>
+TSK: Permission to be called on the task context. <br>
+SYS: Permission to be called on system timer task (CYC/ALM/OVR handler) context or initial handler (main()) context. <br>
+INT: Permission to be called on the interrupt (INH/ISR) hander context. <br>
+LOC: Permission to be called on CPU locked state with any context.<br>
+(SYS and INT are "non-task" context)<br>
+<br>
+O: Permitted<br>
+X: Not permitted<br>
+</ul>
+
+<a name="ls_tsk"></a>
+<h2> 4.1 Task management </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create task</td>
+  </tr>
+  <tr>
+    <td>del_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete task</td>
+  </tr>
+  <tr>
+    <td>(i)act_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Activate task with queuing independently of the task state</td>
+  </tr>
+  <tr>
+    <td>can_act</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Cancel activation</td>
+  </tr>
+  <tr>
+    <td>sta_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Start from DORMANT state with start code</td>
+  </tr>
+  <tr>
+    <td>ext_tsk</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Exit task</td>
+  </tr>
+  <tr>
+    <td>exd_tsk</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Exit and delete task</td>
+  </tr>
+  <tr>
+    <td>ter_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Terminate other task</td>
+  </tr>
+  <tr>
+    <td>chg_pri</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Change task priority</td>
+  </tr>
+  <tr>
+    <td>get_pri</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Get task priority</td>
+  </tr>
+  <tr>
+    <td>ref_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference task state</td>
+  </tr>
+  <tr>
+    <td>ref_tst</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference task state. (simplified)</td>
+  </tr>
+</table></ul>
+
+<a name="ls_tsyn"></a>
+<h2> 4.2 Task dependent synchronization </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(t)slp_tsk</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Sleep until waken up</td>
+  </tr>
+  <tr>
+    <td>(i)wup_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Wake a task up</td>
+  </tr>
+  <tr>
+    <td>can_wup</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Cancel requests of waking up</td>
+  </tr>
+  <tr>
+    <td>vcan_wup</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Cancel requests of waking up. (current task only)</td>
+  </tr>
+  <tr>
+    <td>(i)rel_wai</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Release a task from waiting</td>
+  </tr>
+  <tr>
+    <td>sus_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Suspend a task</td>
+  </tr>
+  <tr>
+    <td>rsm_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Resume suspended task</td>
+  </tr>
+  <tr>
+    <td>frsm_tsk</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Force a task off from suspended state</td>
+  </tr>
+  <tr>
+    <td>dly_tsk</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delay</td>
+  </tr>
+</table></ul>
+
+<a name="ls_exp"></a>
+<h2> 4.3 Task exception </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>def_tex</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Define task exception handler</td>
+  </tr>
+  <tr>
+    <td>(i)ras_tex</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Raise task exception handler</td>
+  </tr>
+  <tr>
+    <td>dis_tex</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Disable task exceptions</td>
+  </tr>
+  <tr>
+    <td>ena_tex</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Enable task exceptions</td>
+  </tr>
+  <tr>
+    <td>sns_tex</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Sensing of task exception hander state</td>
+  </tr>
+  <tr>
+    <td>ref_tex</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference task exception state</td>
+  </tr>
+</table></ul>
+
+<a name="ls_syn"></a>
+<h2> 4.4 Synchronization and communication </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_sem</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create semaphore</td>
+  </tr>
+  <tr>
+    <td>del_sem</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete semaphore</td>
+  </tr>
+  <tr>
+    <td>(i)sig_sem</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Send signal to semaphore</td>
+  </tr>
+  <tr>
+    <td>(t)wai_sem</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Wait signal from semaphore</td>
+  </tr>
+  <tr>
+    <td>pol_sem</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Check signal from semaphore with polling</td>
+  </tr>
+  <tr>
+    <td>ref_sem</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference semaphore state</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_flg</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create eventflag</td>
+  </tr>
+  <tr>
+    <td>del_flg</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete eventflag</td>
+  </tr>
+  <tr>
+    <td>(i)set_flg</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Set eventflag bits</td>
+  </tr>
+  <tr>
+    <td>clr_flg</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Clear eventflag bits</td>
+  </tr>
+  <tr>
+    <td>(t)wai_flg</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Wait eventflag bits</td>
+  </tr>
+  <tr>
+    <td>pol_flg</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Check eventflags bits with polling</td>
+  </tr>
+  <tr>
+    <td>ref_flg</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference eventflag state</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_dtq</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create data queue</td>
+  </tr>
+  <tr>
+    <td>del_dtq</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete data queue</td>
+  </tr>
+  <tr>
+    <td>(t)snd_dtq</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Send to data queue</td>
+  </tr>
+  <tr>
+    <td>(i)psnd_dtq</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Send to data queue with polling</td>
+  </tr>
+  <tr>
+    <td>(i)fsnd_dtq</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Force send to data queue</td>
+  </tr>
+  <tr>
+    <td>(t)rcv_dtq</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Receive from data queue</td>
+  </tr>
+  <tr>
+    <td>prcv_dtq</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Receive from data queue with polling</td>
+  </tr>
+  <tr>
+    <td>ref_dtq</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference data queue state</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_mbx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create mailmox</td>
+  </tr>
+  <tr>
+    <td>del_mbx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete mailbox</td>
+  </tr>
+  <tr>
+    <td>snd_mbx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Send to mailbox</td>
+  </tr>
+  <tr>
+    <td>(t)rcv_mbx</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Receive from mailbox</td>
+  </tr>
+  <tr>
+    <td>prcv_mbx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Receive from mailbox with polling</td>
+  </tr>
+  <tr>
+    <td>ref_mbx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference mailbox state</td>
+  </tr>
+</table></ul>
+
+<a name="ls_esyn"></a>
+<h2> 4.5 Extended synchronization and communication </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_mtx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create mutex</td>
+  </tr>
+  <tr>
+    <td>del_mtx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete mutex</td>
+  </tr>
+  <tr>
+    <td>(t)loc_mtx</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Lock mutex</td>
+  </tr>
+  <tr>
+    <td>ploc_mtx</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Lock mutex with polling</td>
+  </tr>
+  <tr>
+    <td>unl_mtx</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Unlock mutex</td>
+  </tr>
+  <tr>
+    <td>ref_mtx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference mutex state</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_mbf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create message buffer</td>
+  </tr>
+  <tr>
+    <td>del_mbf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete message buffer</td>
+  </tr>
+  <tr>
+    <td>(t)snd_mbf</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Send to message buffer</td>
+  </tr>
+  <tr>
+    <td>psnd_mbf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Send to message buffer with polling</td>
+  </tr>
+  <tr>
+    <td>(t)rcv_mbf</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Receive from message buffer</td>
+  </tr>
+  <tr>
+    <td>prcv_mbf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Receive from message buffer with polling</td>
+  </tr>
+  <tr>
+    <td>ref_mbf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference message buffer state</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_por</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create rendezvous port</td>
+  </tr>
+  <tr>
+    <td>del_por</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete rendezvous port</td>
+  </tr>
+  <tr>
+    <td>(t)cal_por</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Call rendezvous port</td>
+  </tr>
+  <tr>
+    <td>(t)acp_por</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Accept rendezvous port</td>
+  </tr>
+  <tr>
+    <td>pacp_por</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Accept rendezvous port with polling</td>
+  </tr>
+  <tr>
+    <td>fwd_por</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Forward to rendezvous port</td>
+  </tr>
+  <tr>
+    <td>rpl_rdv</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reply to rendezvous port</td>
+  </tr>
+  <tr>
+    <td>ref_por</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference rendezvous port state</td>
+  </tr>
+  <tr>
+    <td>ref_rdv</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference rendezvous state</td>
+  </tr>
+</table></ul>
+
+<a name="ls_mem"></a>
+<h2> 4.6 Memory pool </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_mpf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create fixed-sized memory pool</td>
+  </tr>
+  <tr>
+    <td>del_mpf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete fixed-sized memory pool</td>
+  </tr>
+  <tr>
+    <td>(t)get_mpf</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Get fixed-sized memory pool</td>
+  </tr>
+  <tr>
+    <td>pget_mpf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Get fixed-sized memory pool with polling</td>
+  </tr>
+  <tr>
+    <td>rel_mpf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Release fixed-sized memory pool</td>
+  </tr>
+  <tr>
+    <td>ref_mpf</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference fixed-sized memory pool state</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_mpl</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create variable-sized memory pool</td>
+  </tr>
+  <tr>
+    <td>del_mpl</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete variable-sized memory pool</td>
+  </tr>
+  <tr>
+    <td>(t)get_mpl</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Get variable-sized memory pool</td>
+  </tr>
+  <tr>
+    <td>pget_mpl</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Get variable-sized memory pool with polling</td>
+  </tr>
+  <tr>
+    <td>rel_mpl</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Release variable-sized memory pool</td>
+  </tr>
+  <tr>
+    <td>ref_mpl</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Reference variable-sized memory pool state</td>
+  </tr>
+</table></ul>
+
+<a name="ls_tim"></a>
+<h2> 4.7 Timer </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>set_tim</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Set system time</td>
+  </tr>
+  <tr>
+    <td>get_tim</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Get system time</td>
+  </tr>
+  <tr>
+    <td>isig_tim</td>
+    <td>X</td>
+    <td>X</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Time tick signal for system time</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_cyc</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create cyclic handler</td>
+  </tr>
+  <tr>
+    <td>del_cyc</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete cyclic handler</td>
+  </tr>
+  <tr>
+    <td>sta_cyc</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Start cyclic handler</td>
+  </tr>
+  <tr>
+    <td>stp_cyc</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Stop cyclic handler</td>
+  </tr>
+  <tr>
+    <td>ref_cyc</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference cyclic handler state</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(a)cre_alm</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create alarm handler</td>
+  </tr>
+  <tr>
+    <td>del_alm</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete alarm handler</td>
+  </tr>
+  <tr>
+    <td>sta_alm</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Start alarm handler</td>
+  </tr>
+  <tr>
+    <td>stp_alm</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Stop alarm handler</td>
+  </tr>
+  <tr>
+    <td>ref_alm</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference alarm handler state</td>
+  </tr>
+</table></ul>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>def_ovr</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Define overrun handler</td>
+  </tr>
+  <tr>
+    <td>sta_ovr</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Start overrun handler</td>
+  </tr>
+  <tr>
+    <td>stp_ovr</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Stop overrun handler</td>
+  </tr>
+  <tr>
+    <td>ref_ovr</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference overrun handler</td>
+  </tr>
+</table></ul>
+
+<a name="ls_sta"></a>
+<h2> 4.8 System state management </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>(i)rot_rdq</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Rotate ready queue</td>
+  </tr>
+  <tr>
+    <td>(i)get_tid</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Get current running task ID</td>
+  </tr>
+  <tr>
+    <td>vget_tid</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Get current running task ID (simplified)</td>
+  </tr>
+  <tr>
+    <td>(i)loc_cpu</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Lock CPU</td>
+  </tr>
+  <tr>
+    <td>(i)unl_cpu</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Unlock CPU</td>
+  </tr>
+  <tr>
+    <td>dis_dsp</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Disable dispatch</td>
+  </tr>
+  <tr>
+    <td>ena_dsp</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Enable dispatch</td>
+  </tr>
+  <tr>
+    <td>sns_ctx</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Sensing of context</td>
+  </tr>
+  <tr>
+    <td>sns_loc</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Sensing of CPU lock state</td>
+  </tr>
+  <tr>
+    <td>sns_dsp</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Sensing of dispatch permission</td>
+  </tr>
+  <tr>
+    <td>sns_dpn</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Sensing of dispatch pending state</td>
+  </tr>
+  <tr>
+    <td>ref_sys</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>Reference system state</td>
+  </tr>
+</table></ul>
+
+<a name="ls_int"></a>
+<h2> 4.9 Interrupt </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>def_inh</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Define interrupt handler</td>
+  </tr>
+  <tr>
+    <td>(a)cre_isr</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Create interrupt service routine</td>
+  </tr>
+  <tr>
+    <td>del_isr</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Delete interrupt service routine</td>
+  </tr>
+  <tr>
+    <td>ref_isr</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference interrupt service routine</td>
+  </tr>
+  <tr>
+    <td>dis_int</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Disable individual interrupt (target dependent)</td>
+  </tr>
+  <tr>
+    <td>ena_int</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Enable individual interrupt (target dependent)</td>
+  </tr>
+  <tr>
+    <td>chg_ims</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Change interrupt mask level</td>
+  </tr>
+  <tr>
+    <td>get_ims</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Get interrupt mask level</td>
+  </tr>
+  <tr>
+    <td>vset_psw</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Set processor status word</td>
+  </tr>
+  <tr>
+    <td>vdis_psw</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Disable interrupt and return previous processor status word</td>
+  </tr>
+</table></ul>
+
+<a name="ls_svc"></a>
+<h2> 4.10 Extended service call </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>def_svc</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>X</td>
+    <td>Define extended serivce call</td>
+  </tr>
+  <tr>
+    <td>cal_svc</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Call extended service call</td>
+  </tr>
+</table></ul>
+
+<a name="ls_sys"></a>
+<h2> 4.11 System configuration </h2>
+
+<ul><table>
+  <tr>
+    <th>service call</th>
+    <th>TSK</th>
+    <th>SYS</th>
+    <th>INT</th>
+    <th>LOC</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>ref_cfg</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference kernel configuration</td>
+  </tr>
+  <tr>
+    <td>ref_ver</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>X</td>
+    <td>Reference kernel version</td>
+  </tr>
+</table></ul>
+
+<hr/>
+<a name="rom"></a>
+<h2> 5 How to boot from ROM </h2>
+
+<a name="rombld"></a>
+<h2> 5.1 Build </h2>
+
+There is a sample application to boot from ROM at
+
+<ul><pre>
+(URIBO INSTALLED DIR)/(CPU NAME)/app_(TARGET NAME)_ROM/
+</pre></ul>
+
+e.g., A sample for AE-H8/3069-LAN
+
+<ul><pre>
+(URIBO INSTALL DIR)/h8300h/app_ae_h8_3069_lan_ROM/test.mot
+</pre></ul>
+
+Please use files as follows to build a ROM application.
+
+<ul><table>
+  <tr>
+    <th>file</th>
+    <th>comment</th>
+  </tr>
+  <tr>
+    <td>Makefile</td>
+    <td>"-D_ROM_" option added to CFLAGS and .mot (HEX) file will be built.</th>
+  </tr>
+  <tr>
+    <td>rom.x</td>
+    <td>The linker script for ROM application.</th>
+  </tr>
+  <tr>
+    <td>romcrt0.S</td>
+    <td>Interrupt vectors and C start up for ROM application.</th>
+  </tr>
+</table></ul>
+
+<a name="rompgm"></a>
+<h2> 5.2 Program target </h2>
+
+Please install the HEX file of application to target ROM. <br><br>
+
+(e.g., For AE-H8/3069-LAN)<br><br>
+
+Please install test.mot same as
+<a href="inst_h8300h.html#stub"> h8-stub installation </a>.<br>
+
+This application output printf messages to not GDB console but SCI1
+port (CN4) because it is not include GDB stub. So, you should use
+serial terminal emulator like as "gtkterm" to see messages. 
+Please set serial to: 38400bps, no-parity, 1 stop bit, no-flow.<br><br>
+
+<hr/>
+<a name="sio"></a>
+<h2> 6 SIO driver (data queueu sample) </h2>
+
+There is an innterupt driven SIO driver sample (sio.h/sio.c).
+This is an usage example of data queue, too.
+
+<a name="ini_sio"></a>
+<h2> 6.1 ini_sio </h2>
+
+SYNOPSIS
+<ul><pre>
+ER ini_sio(int ch, int bps, int option, UINT bufsiz);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function will create 2 data queues and initialize SIO driver.
+"bufsiz" will be passed to acre_dtq.
+Please see sio.c of each target for more detail.
+</ul>
+
+RETURN VALUES
+<ul>
+E_OK: OK<br>
+-1: Bad parameter<br>
+other: Service call error (E_???)
+</ul>
+
+<a name="put_sio"></a>
+<h2> 6.2 put_sio </h2>
+
+SYNOPSIS
+<ul><pre>
+void put_sio(int ch, int data);
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function will send byte data to SIO.
+Please see sio.c of each target for more detail.
+</ul>
+
+<a name="get_sio"></a>
+<h2> 6.3 get_sio </h2>
+
+SYNOPSIS
+<ul><pre>
+int get_sio(int ch, TMO tmout)
+</pre></ul>
+
+DESCRIPTION
+<ul>
+This function will receive byte data from SIO.
+You can specify timeout value or TMO_FEVR or TMO_POL to "tmout".
+Please see sio.c of each target for more detail.
+</ul>
+
+RETURN VALUES
+<ul>
+>= 0: received character<br>
+<  0: trcv_dtq error (E_???)
+</ul>
+
+<br>
+<hr/>
+Copyright (C) 256TECH Co., Ltd. <br>
+Masahiro Sakamoto<br>
+mail:m-sakamoto(AT)users.sourceforge.net
+
+</body></html>
